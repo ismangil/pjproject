@@ -4,7 +4,7 @@ RUN svn --trust-server-cert --non-interactive checkout https://wush.net/svn/pjsi
 
 COPY . /pjproject
 RUN cd /pjproject
-RUN timestamp=$(date +%Y%m%d-%H%M) && python ~/lib/python/ccdash.py configure "./configure" \
+RUN timestamp=$(date +%Y%m%d-%H%M) && ls && python ~/lib/python/ccdash.py configure "./configure" \
     -U http://my.cdash.org/submit.php?project=PJSIP \
     -S snap-ci \
     -T $timestamp \
