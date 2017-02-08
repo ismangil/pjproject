@@ -5,15 +5,13 @@ RUN svn --trust-server-cert --non-interactive checkout https://wush.net/svn/pjsi
 COPY . /pjproject
 RUN cd /pjproject && timestamp=$(date +%Y%m%d-%H%M) && ls && python ~/lib/python/ccdash.py configure "./configure" \
     -U http://my.cdash.org/submit.php?project=PJSIP \
-    -S snap-ci \
+    -S shippable-ci \
     -T $timestamp \
     -B linux-gcc \
-    -G Continuous
-
-    #  && \
-		# python ~/lib/python/ccdash.py build "make dep && make all" \
-		#     -U http://my.cdash.org/submit.php?project=PJSIP \
-		#     -S snap-ci \
-		#     -T $timestamp \
-		#     -B linux-gcc \
-		#     -G Continuous && \
+    -G Continuous && \
+		python ~/lib/python/ccdash.py build "make dep && make all" \
+		     -U http://my.cdash.org/submit.php?project=PJSIP \
+		     -S shippable-ci \
+		     -T $timestamp \
+		     -B linux-gcc \
+		     -G Continuous
