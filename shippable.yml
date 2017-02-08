@@ -1,3 +1,4 @@
+language: none
 build:
   pre_ci:
     - docker build -t pjproject .
