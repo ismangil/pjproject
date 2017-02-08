@@ -8,10 +8,12 @@ RUN cd /pjproject && timestamp=$(date +%Y%m%d-%H%M) && ls && python ~/lib/python
     -S snap-ci \
     -T $timestamp \
     -B linux-gcc \
-    -G Continuous && \
-		python ~/lib/python/ccdash.py build "make dep && make all" \
-		    -U http://my.cdash.org/submit.php?project=PJSIP \
-		    -S snap-ci \
-		    -T $timestamp \
-		    -B linux-gcc \
-		    -G Continuous && \
+    -G Continuous
+
+    #  && \
+		# python ~/lib/python/ccdash.py build "make dep && make all" \
+		#     -U http://my.cdash.org/submit.php?project=PJSIP \
+		#     -S snap-ci \
+		#     -T $timestamp \
+		#     -B linux-gcc \
+		#     -G Continuous && \
