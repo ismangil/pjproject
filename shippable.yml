@@ -8,11 +8,19 @@ build:
     - python setup.py install --home=~
     - cd ..
     - timestamp=$(date +%Y%m%d-%H%M) && python ~/lib/python/ccdash.py configure "CC=gcc-4.8 ./configure"
-          -U http://my.cdash.org/submit.php?project=PJSIP
-          -S shippable-ci
-          -T $timestamp
-          -B linux-gcc
-          -G Continuous
+       -U http://my.cdash.org/submit.php?project=PJSIP
+       -S shippable-ci
+       -T $timestamp
+       -B linux-gcc
+       -G Continuous
+    - python ~/lib/python/ccdash.py build "make dep && make all"
+       -U http://my.cdash.org/submit.php?project=PJSIP
+       -S shippable-ci
+       -T $timestamp
+       -B linux-gcc
+       -G Continuous
+
+
 
 integrations:
   notifications:
