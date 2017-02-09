@@ -21,9 +21,9 @@ integrations:
       on_success: never
       on_failure: never
       on_pull_request: never
-    - integrationName: teluu-slack
-      type: slack
-      recipients:
-        - "@perry"
-      on_success: always
-      on_failure: always
+    # - integrationName: teluu-slack
+    #   type: slack
+    #   recipients:
+    #     - "@perry"
+    #   on_success: always
+    #   on_failure: always
