@@ -2,16 +2,28 @@ language: c
 build:
   ci:
     - apt-get update && apt-get install -y build-essential g++ subversion python-svn curl libasound2-dev
-    - gcc -v
-    - g++ -v
-    - CC=gcc-4.8 ./configure && make depend && make
-    # - svn --trust-server-cert --non-interactive checkout https://wush.net/svn/pjsip-labs/ccdash
-    # - cd ccdash
-    # - python setup.py install --home=~
-    # - cd ..
-    # - timestamp=$(date +%Y%m%d-%H%M)
-    # - python ~/lib/python/ccdash.py configure "./configure" -U http://my.cdash.org/submit.php?project=PJSIP
-    #     -S shippable-ci \
-    #     -T $timestamp \
-    #     -B linux-gcc \
-    #     -G Continuous
+    # - CC=gcc-4.8 ./configure && make depend && make
+    - svn --trust-server-cert --non-interactive checkout https://wush.net/svn/pjsip-labs/ccdash
+    - cd ccdash
+    - python setup.py install --home=~
+    - cd ..
+    - timestamp=$(date +%Y%m%d-%H%M) && python ~/lib/python/ccdash.py configure "CC=gcc-4.8 ./configure"
+          -U http://my.cdash.org/submit.php?project=PJSIP
+          -S shippable-ci
+          -T $timestamp
+          -B linux-gcc
+          -G Continuous
+
+integrations:
+  notifications:
+    - integrationName: email
+      type: email
+      on_success: never
+      on_failure: never
+      on_pull_request: never
+    - integrationName: teluu-slack
+      type: slack
+      recipients:
+        - "@perry"
+      on_success: always
+      on_failure: always
