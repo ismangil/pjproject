@@ -1,14 +1,14 @@
 language: c
 build:
   ci:
-    - apt-get update && apt-get install -y subversion python-svn curl libasound2-dev
-    - svn --trust-server-cert --non-interactive checkout https://wush.net/svn/pjsip-labs/ccdash
-    - cd ccdash
-    - python setup.py install --home=~
-    - cd ..
-    - timestamp=$(date +%Y%m%d-%H%M) && python ~/lib/python/ccdash.py configure "./configure" \
-        -U http://my.cdash.org/submit.php?project=PJSIP \
-        -S shippable-ci \
-        -T $timestamp \
-        -B linux-gcc \
-        -G Continuous
+    # - apt-get update && apt-get install -y subversion python-svn curl libasound2-dev
+    # - svn --trust-server-cert --non-interactive checkout https://wush.net/svn/pjsip-labs/ccdash
+    # - cd ccdash
+    # - python setup.py install --home=~
+    # - cd ..
+    # - timestamp=$(date +%Y%m%d-%H%M)
+    # - python ~/lib/python/ccdash.py configure "./configure" -U http://my.cdash.org/submit.php?project=PJSIP
+    #     -S shippable-ci \
+    #     -T $timestamp \
+    #     -B linux-gcc \
+    #     -G Continuous
