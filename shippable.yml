@@ -4,7 +4,7 @@ build:
     - apt-get update && apt-get install -y build-essential g++ subversion python-svn curl libasound2-dev
     - gcc -v
     - g++ -v
-    - ./configure && make depend && make
+    - CC=gcc-4.8 ./configure && make depend && make
     # - svn --trust-server-cert --non-interactive checkout https://wush.net/svn/pjsip-labs/ccdash
     # - cd ccdash
     # - python setup.py install --home=~
