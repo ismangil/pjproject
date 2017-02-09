@@ -21,14 +21,7 @@ build:
        -B linux-gcc
        -G Continuous
     - cd tests/pjsua
-    - python ~/lib/python/ccdash.py test "python runall.py"
-       -U http://my.cdash.org/submit.php?project=PJSIP
-       -S shippable-ci
-       -T $timestamp
-       -B linux-gcc
-       -G Continuous
-
-
+    - python runall.py
 
 integrations:
   notifications:
