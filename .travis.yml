@@ -5,3 +5,4 @@ addons:
   apt:
     packages:
     - gobjc
+    - libasound2-dev
