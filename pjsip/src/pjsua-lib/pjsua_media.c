@@ -852,6 +852,21 @@ static pj_status_t create_ice_media_transport(
     
     ice_cfg.opt = acc_cfg->ice_cfg.ice_opt;
 
+    if (call_med->call->async_call.rem_sdp) {
+    	/* Match the default address family according to the offer */
+        const pj_str_t ID_IP6 = { "IP6", 3};
+    	const pjmedia_sdp_media *m;
+	const pjmedia_sdp_conn *c;
+
+    	m = call_med->call->async_call.rem_sdp->media[call_med->idx];
+	c = m->conn? m->conn : call_med->call->async_call.rem_sdp->conn;
+
+	if (pj_stricmp(&c->addr_type, &ID_IP6) == 0)
+	    ice_cfg.af = pj_AF_INET6();
+    } else if (use_ipv6) {
+    	ice_cfg.af = pj_AF_INET6();
+    }
+
     /* If STUN transport is configured, initialize STUN transport settings */
     if ((pj_sockaddr_has_addr(&pjsua_var.stun_srv) &&
 	 pjsua_media_acc_is_using_stun(call_med->call->acc_id)) ||
@@ -1259,6 +1274,7 @@ static void sort_media(const pjmedia_sdp_session *sdp,
     for (i=0; i<sdp->media_count && count<PJSUA_MAX_CALL_MEDIA; ++i) {
 	const pjmedia_sdp_media *m = sdp->media[i];
 	const pjmedia_sdp_conn *c;
+	static const pj_str_t ID_RTP_SAVP = { "RTP/SAVP", 8 };
 
 	/* Skip different media */
 	if (pj_stricmp(&m->desc.media, type) != 0) {
@@ -1269,7 +1285,7 @@ static void sort_media(const pjmedia_sdp_session *sdp,
 	c = m->conn? m->conn : sdp->conn;
 
 	/* Supported transports */
-	if (pj_stricmp2(&m->desc.transport, "RTP/SAVP")==0) {
+	if (pj_stristr(&m->desc.transport, &ID_RTP_SAVP)) {
 	    switch (use_srtp) {
 	    case PJMEDIA_SRTP_MANDATORY:
 	    case PJMEDIA_SRTP_OPTIONAL:
@@ -1478,6 +1494,34 @@ void pjsua_set_media_tp_state(pjsua_call_media *call_med,
     call_med->tp_st = tp_st;
 }
 
+
+/* This callback is called when SRTP negotiation completes */
+static void on_srtp_nego_complete(pjmedia_transport *tp, 
+				  pj_status_t result)
+{
+    pjsua_call_media *call_med = (pjsua_call_media*)tp->user_data;
+    pjsua_call *call;
+
+    if (!call_med)
+	return;
+
+    call = call_med->call;
+    PJ_PERROR(4,(THIS_FILE, result,
+		 "Call %d: Media %d: SRTP negotiation completes",
+	         call->index, call_med->idx));
+
+    if (result != PJ_SUCCESS) {
+	call_med->state = PJSUA_CALL_MEDIA_ERROR;
+	call_med->dir = PJMEDIA_DIR_NONE;
+	if (call && pjsua_var.ua_cfg.cb.on_call_media_state) {
+	    /* Defer the callback to a timer */
+	    pjsua_schedule_timer2(&ice_failed_nego_cb,
+				  (void*)(pj_ssize_t)call->index, 1);
+	}
+    }
+}
+
+
 /* Callback to resume pjsua_call_media_init() after media transport
  * creation is completed.
  */
@@ -1531,6 +1575,8 @@ static pj_status_t call_media_init_cb(pjsua_call_media *call_med,
 	/* Always create SRTP adapter */
 	pjmedia_srtp_setting_default(&srtp_opt);
 	srtp_opt.close_member_tp = PJ_TRUE;
+	srtp_opt.cb.on_srtp_nego_complete = &on_srtp_nego_complete;
+	srtp_opt.user_data = call_med;
 
 	/* If media session has been ever established, let's use remote's 
 	 * preference in SRTP usage policy, especially when it is stricter.
@@ -1985,7 +2031,9 @@ pj_status_t pjsua_media_channel_init(pjsua_call_id call_id,
 	     */
 	    sort_media2(call->media_prov, call->med_prov_cnt,
 			PJMEDIA_TYPE_AUDIO, maudidx, &maudcnt, &mtotaudcnt);
-	    pj_assert(maudcnt > 0);
+
+	    /* No need to assert if there's no media. */
+	    //pj_assert(maudcnt > 0);
 
 	    sort_media2(call->media_prov, call->med_prov_cnt,
 			PJMEDIA_TYPE_VIDEO, mvididx, &mvidcnt, &mtotvidcnt);
@@ -2534,11 +2582,17 @@ pj_status_t pjsua_media_channel_create_sdp(pjsua_call_id call_id,
 
 static void stop_media_stream(pjsua_call *call, unsigned med_idx)
 {
-    pjsua_call_media *call_med = &call->media[med_idx];
-
-    /* Check if stream does not exist */
-    if (med_idx >= call->med_cnt)
-	return;
+    pjsua_call_media *call_med;
+    
+    if (pjsua_call_media_is_changing(call)) {
+    	call_med = &call->media_prov[med_idx];
+    	if (med_idx >= call->med_prov_cnt)
+	    return;
+    } else {
+    	call_med = &call->media[med_idx];
+        if (med_idx >= call->med_cnt)
+	    return;
+    }
 
     pj_log_push_indent();
 
@@ -3000,7 +3054,7 @@ pj_status_t pjsua_media_channel_update(pjsua_call_id call_id,
 		call_med->state = PJSUA_CALL_MEDIA_NONE;
 		call_med->dir = PJMEDIA_DIR_NONE;
 
-	    } else {
+	    } else if (call_med->tp) {
 		pjmedia_transport_info tp_info;
 		pjmedia_srtp_info *srtp_info;
 
@@ -3158,7 +3212,7 @@ pj_status_t pjsua_media_channel_update(pjsua_call_id call_id,
 		call_med->state = PJSUA_CALL_MEDIA_NONE;
 		call_med->dir = PJMEDIA_DIR_NONE;
 
-	    } else {
+	    } else if (call_med->tp) {
 		pjmedia_transport_info tp_info;
 		pjmedia_srtp_info *srtp_info;
 

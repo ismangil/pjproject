@@ -130,6 +130,10 @@ static void reset_call(pjsua_call_id id)
     pjsua_call *call = &pjsua_var.calls[id];
     unsigned i;
 
+    if (call->incoming_data) {
+	pjsip_rx_data_free_cloned(call->incoming_data);
+	call->incoming_data = NULL;
+    }
     pj_bzero(call, sizeof(*call));
     call->index = id;
     call->last_text.ptr = call->last_text_buf_;
@@ -1646,7 +1650,10 @@ pj_bool_t pjsua_call_on_incoming(pjsip_rx_data *rdata)
 	if (pjsua_var.ua_cfg.cb.on_incoming_call) {
 	    pjsua_var.ua_cfg.cb.on_incoming_call(acc_id, call_id, rdata);
 
-	    /* onIncomingCall() may be simulated by onCreateMediaTransport()
+            /* Notes:
+             * - the call might be reset when it's rejected or hangup
+             * by application from the callback.
+	     * - onIncomingCall() may be simulated by onCreateMediaTransport()
 	     * when media init is done synchrounously (see #1916). And if app
 	     * happens to answer/hangup the call from the callback, the 
 	     * answer/hangup should have been delayed (see #1923), 
@@ -1820,6 +1827,8 @@ PJ_DEF(pj_status_t) pjsua_call_get_info( pjsua_call_id call_id,
 					       dlg->local.contact->uri,
 					       info->local_contact.ptr,
 					       sizeof(info->buf_.local_contact));
+    if (info->local_contact.slen < 0)
+	info->local_contact.slen = 0;
 
     /* remote info */
     info->remote_info.ptr = info->buf_.remote_info;

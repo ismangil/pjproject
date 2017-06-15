@@ -2797,7 +2797,7 @@ PJ_DEF(pj_status_t) pjsip_inv_process_redirect( pjsip_inv_session *inv,
 	    if (op == PJSIP_REDIRECT_ACCEPT_REPLACE) {
 		pjsip_to_hdr *to;
 		pjsip_dialog *dlg = inv->dlg;
-		enum { TMP_LEN = 128 };
+		enum { TMP_LEN = PJSIP_MAX_URL_SIZE };
 		char tmp[TMP_LEN];
 		int len;
 
@@ -3275,7 +3275,7 @@ static void inv_respond_incoming_cancel(pjsip_inv_session *inv,
 
     pjsip_tsx_create_key(rdata->tp_info.pool, &key, PJSIP_ROLE_UAS,
 			 pjsip_get_invite_method(), rdata);
-    invite_tsx = pjsip_tsx_layer_find_tsx(&key, PJ_TRUE);
+    invite_tsx = pjsip_tsx_layer_find_tsx2(&key, PJ_TRUE);
 
     if (invite_tsx == NULL) {
 
@@ -3324,7 +3324,7 @@ static void inv_respond_incoming_cancel(pjsip_inv_session *inv,
     }
 
     if (invite_tsx)
-	pj_grp_lock_release(invite_tsx->grp_lock);
+	pj_grp_lock_dec_ref(invite_tsx->grp_lock);
 }
 
 

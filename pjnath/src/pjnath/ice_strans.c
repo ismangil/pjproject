@@ -231,6 +231,7 @@ PJ_DEF(void) pj_ice_strans_cfg_default(pj_ice_strans_cfg *cfg)
 {
     pj_bzero(cfg, sizeof(*cfg));
 
+    cfg->af = pj_AF_INET();
     pj_stun_config_init(&cfg->stun_cfg, NULL, 0, NULL, NULL);
     pj_ice_strans_stun_cfg_default(&cfg->stun);
     pj_ice_strans_turn_cfg_default(&cfg->turn);
@@ -345,7 +346,12 @@ static pj_status_t add_update_turn(pj_ice_strans *ice_st,
 	    for (i=0; i<comp->cand_cnt; ++i) {
 		if (comp->cand_list[i].type == PJ_ICE_CAND_TYPE_SRFLX) {
 		    comp->default_cand = i;
-		    break;
+		    if (ice_st->cfg.af == pj_AF_UNSPEC() ||
+		        comp->cand_list[i].base_addr.addr.sa_family ==
+		        ice_st->cfg.af)
+		    {
+		        break;
+		    }
 		}
 	    }
 	}
@@ -547,7 +553,13 @@ static pj_status_t add_stun_and_host(pj_ice_strans *ice_st,
 	comp->cand_cnt++;
 
 	/* Set default candidate to srflx */
-	comp->default_cand = (unsigned)(cand - comp->cand_list);
+	if (comp->cand_list[comp->default_cand].type != PJ_ICE_CAND_TYPE_SRFLX
+	    || (ice_st->cfg.af != pj_AF_UNSPEC() &&
+	        comp->cand_list[comp->default_cand].base_addr.addr.sa_family
+	        != ice_st->cfg.af))
+	{
+	    comp->default_cand = (unsigned)(cand - comp->cand_list);
+	}
 
 	pj_log_pop_indent();
     }
@@ -637,6 +649,16 @@ static pj_status_t add_stun_and_host(pj_ice_strans *ice_st,
             
 	    pj_ice_calc_foundation(ice_st->pool, &cand->foundation,
 				   cand->type, &cand->base_addr);
+
+	    /* Set default candidate with the preferred default
+	     * address family
+	     */
+	    if (comp->ice_st->cfg.af != pj_AF_UNSPEC() &&
+	        comp->cand_list[comp->default_cand].addr.addr.sa_family !=
+	        ice_st->cfg.af)
+	    {
+	        comp->default_cand = (unsigned)(cand - comp->cand_list);
+	    }
 
 	    PJ_LOG(4,(ice_st->obj_name,
 		      "Comp %d/%d: host candidate %s (tpid=%d) added",
@@ -840,6 +862,10 @@ static void destroy_ice_st(pj_ice_strans *ice_st)
 	      ice_st));
     pj_log_push_indent();
 
+    /* Reset callback and user data */
+    pj_bzero(&ice_st->cb, sizeof(ice_st->cb));
+    ice_st->user_data = NULL;
+
     pj_grp_lock_acquire(ice_st->grp_lock);
 
     if (ice_st->destroy_req) {
@@ -932,8 +958,8 @@ static void sess_init_update(pj_ice_strans *ice_st)
 {
     unsigned i;
 
-    /* Ignore if init callback has been called */
-    if (ice_st->cb_called)
+    /* Ignore if ICE is destroying or init callback has been called */
+    if (ice_st->destroy_req || ice_st->cb_called)
 	return;
 
     /* Notify application when all candidates have been gathered */
@@ -2003,11 +2029,18 @@ static void turn_on_state(pj_turn_sock *turn_sock, pj_turn_state_t old_state,
 	cand->status = PJ_SUCCESS;
 
 	/* Set default candidate to relay */
-	comp->default_cand = (unsigned)(cand - comp->cand_list);
+	if (comp->cand_list[comp->default_cand].type!=PJ_ICE_CAND_TYPE_RELAYED
+	    || (comp->ice_st->cfg.af != pj_AF_UNSPEC() &&
+	        comp->cand_list[comp->default_cand].addr.addr.sa_family
+	        != comp->ice_st->cfg.af))
+	{
+	    comp->default_cand = (unsigned)(cand - comp->cand_list);
+	}
 
 	/* Prefer IPv4 relay as default candidate for better connectivity
 	 * with IPv4 endpoints.
 	 */
+	/*
 	if (cand->addr.addr.sa_family != pj_AF_INET()) {
 	    for (i=0; i<comp->cand_cnt; ++i) {
 		if (comp->cand_list[i].type == PJ_ICE_CAND_TYPE_RELAYED &&
@@ -2019,6 +2052,7 @@ static void turn_on_state(pj_turn_sock *turn_sock, pj_turn_state_t old_state,
 		}
 	    }
 	}
+	*/
 
 	PJ_LOG(4,(comp->ice_st->obj_name,
 		  "Comp %d/%d: TURN allocation (tpid=%d) complete, "

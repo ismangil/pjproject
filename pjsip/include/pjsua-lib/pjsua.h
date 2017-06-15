@@ -706,7 +706,8 @@ typedef struct pjsua_callback
      * Normal application would need to implement this callback, e.g.
      * to connect the call's media to sound device. When ICE is used,
      * this callback will also be called to report ICE negotiation
-     * failure.
+     * failure. When DTLS-SRTP is used, this callback will also be called
+     * to report DTLS negotiation failure.
      *
      * @param call_id	The call index.
      */
@@ -4231,10 +4232,10 @@ typedef struct pjsua_call_info
 
     /** Internal */
     struct {
-	char	local_info[128];
-	char	local_contact[128];
-	char	remote_info[128];
-	char	remote_contact[128];
+	char	local_info[PJSIP_MAX_URL_SIZE];
+	char	local_contact[PJSIP_MAX_URL_SIZE];
+	char	remote_info[PJSIP_MAX_URL_SIZE];
+	char	remote_contact[PJSIP_MAX_URL_SIZE];
 	char	call_id[128];
 	char	last_status_text[128];
     } buf_;

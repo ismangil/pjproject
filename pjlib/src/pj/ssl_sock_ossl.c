@@ -51,7 +51,6 @@
 #include <openssl/err.h>
 #include <openssl/x509v3.h>
 #include <openssl/rand.h>
-#include <openssl/engine.h>
 #include <openssl/opensslconf.h>
 
 #if !defined(OPENSSL_NO_EC) && OPENSSL_VERSION_NUMBER >= 0x1000200fL
@@ -123,9 +122,14 @@ static unsigned get_nid_from_cid(unsigned cid)
 
 
 #ifdef _MSC_VER
-#  pragma comment( lib, "libeay32")
-#  pragma comment( lib, "ssleay32")
-#  pragma comment( lib, "crypt32")
+#  if OPENSSL_VERSION_NUMBER >= 0x10100000L
+#    pragma comment(lib, "libcrypto")
+#    pragma comment(lib, "libssl")
+#    pragma comment(lib, "crypt32")
+#  else
+#    pragma comment(lib, "libeay32")
+#    pragma comment(lib, "ssleay32")
+#  endif
 #endif
 
 
@@ -144,7 +148,8 @@ static unsigned get_nid_from_cid(unsigned cid)
 enum ssl_state {
     SSL_STATE_NULL,
     SSL_STATE_HANDSHAKING,
-    SSL_STATE_ESTABLISHED
+    SSL_STATE_ESTABLISHED,
+    SSL_STATE_ERROR
 };
 
 /*
@@ -1906,6 +1911,10 @@ static pj_bool_t asock_on_data_read (pj_activesock_t *asock,
 		    if (size_ > 0)
 			buf->len += size_;
     		
+                    if (status != PJ_SUCCESS) {
+                        ssock->ssl_state = SSL_STATE_ERROR;
+                    }
+
 		    ret = (*ssock->param.cb.on_data_read)(ssock, buf->data,
 							  buf->len, status,
 							  &remainder_);
@@ -2657,7 +2666,11 @@ PJ_DEF(pj_status_t) pj_ssl_sock_get_info (pj_ssl_sock_t *ssock,
 
 	/* Current cipher */
 	cipher = SSL_get_current_cipher(ssock->ossl_ssl);
-	info->cipher = (SSL_CIPHER_get_id(cipher) & 0x00FFFFFF);
+	if (cipher) {
+	    info->cipher = (SSL_CIPHER_get_id(cipher) & 0x00FFFFFF);
+	} else {
+	    info->cipher = PJ_TLS_UNKNOWN_CIPHER;
+	}
 
 	/* Remote address */
 	pj_sockaddr_cp(&info->remote_addr, &ssock->rem_addr);
