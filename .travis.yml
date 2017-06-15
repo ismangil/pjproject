@@ -6,3 +6,5 @@ addons:
     packages:
     - gobjc
     - libasound2-dev
+
+script: ./configure && make dep && make
