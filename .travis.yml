@@ -9,7 +9,11 @@ addons:
     packages:
     - gobjc
     - libasound2-dev
+    - nasm
 
+install:
+  - git clone https://github.com/cisco/openh264
+  - "cd openh264 && make && make install"
 
 script: "./configure && make dep && make"
 
