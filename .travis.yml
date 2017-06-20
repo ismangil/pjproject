@@ -13,7 +13,7 @@ addons:
 
 install:
   - git clone https://github.com/cisco/openh264
-  - "cd openh264 && make PREFIX=$HOME/openh264-install && make PREFIX=$HOME/openh264-install install"
+  - "cd openh264 && make PREFIX=$HOME/openh264-install && make PREFIX=$HOME/openh264-install install && cd .."
 
 script: "./configure --with-openh264=$HOME/openh264-install && make dep && make"
 
