@@ -9,6 +9,7 @@ addons:
     packages:
     - gobjc
     - libasound2-dev
+    - libopus-dev
     - nasm
     - libavcodec-dev
     - libavformat-dev
@@ -18,7 +19,7 @@ addons:
 install:
 - git clone https://github.com/cisco/openh264
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install nasm sdl2 ffmpeg; fi
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install openssl nasm sdl2 ffmpeg opus; fi
 - cd openh264 && make PREFIX=$HOME/openh264-install && make PREFIX=$HOME/openh264-install
   install && cd ..
 script: "./configure --with-openh264=$HOME/openh264-install && make dep && make"
@@ -35,7 +36,7 @@ deploy:
   secret_access_key:
     secure: GETvhh3l6iMmaTy3d8+F3IJ7XY//IsR8pHGD6LXCiuPcpx+YAxUd2qdwbSXveTySLDx5JicTKi7p9ULgMQZshyB+TZtXrttWfXZ5npLul+BSWTb4MXjTo2MQQgwhlpcR2eoV+HT7uWPSgZItMy5+UrbhPq3OzNkTol4DNmJ8O5Zcsjiroc+mSndbd2NCHBxOrWFXptf8vwUP4apgefhH50El60gkF9bN0AKU7r0n0gwyt5blGjiAa9b7Y0ndeBP7JIcwgh5Psey6fhlZ7/s8zqwdXsZmJc9dBikD1RtaQXYayVizj3+Hm/yCujQta3QAZY25916OhhytR4pIupP1T2C7FsAFDDaGnHhXgv2upsoon9PDlSTSXIjewJaDrq2HL2DcOBeo5um/PZz5X/NRlI/heJ1KwLfIe5RDFRMOz+JUanw/t5N79/Bc+AK8q0H+hKxY+YsFqmxcJ0h1drDtVfXiFk97aGPNdsd9W2rZBAhgf483dG5e2ZY64cZktU7zGE9FfnARoV2WWC77evdY/R43EfUChRB9OKiZ4l76Y2SGaYjI8UgFQqJ5R/YHm8Ovu3hJ49GcGooR7KI66fkY2S/hL0+zjeV8eDKmGXH+qC9NCXI9mMP5SVlJsCRsQ8GtbSin3jPtmHC+ZKxGJgwNWqTz9d4gClGVjiPxGo+2f6U=
   bucket: pjsip-ismangil
-  upload-dir: build-artifacts
+  upload-dir: build-artifacts/$TRAVIS_OS_NAME
   local-dir: pjsip-apps/bin
   on:
     repo: ismangil/pjproject
