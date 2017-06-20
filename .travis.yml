@@ -10,9 +10,12 @@ addons:
     - gobjc
     - libasound2-dev
     - nasm
+    - libavcodec-dev
 
 install:
   - git clone https://github.com/cisco/openh264
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install nasm; fi
   - "cd openh264 && make PREFIX=$HOME/openh264-install && make PREFIX=$HOME/openh264-install install && cd .."
 
 script: "./configure --with-openh264=$HOME/openh264-install && make dep && make"
