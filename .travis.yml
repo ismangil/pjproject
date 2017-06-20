@@ -12,6 +12,7 @@ addons:
     - nasm
     - libavcodec-dev
     - libsdl2-dev
+    - v4l-utils
 
 install:
   - git clone https://github.com/cisco/openh264
