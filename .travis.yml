@@ -1,6 +1,6 @@
 os:
-  - linux
-  - osx
+- linux
+- osx
 sudo: false
 dist: trusty
 language: c
@@ -12,20 +12,29 @@ addons:
     - nasm
     - libavcodec-dev
     - libsdl2-dev
-    - v4l-utils
-
+    - libv4l-dev
 install:
-  - git clone https://github.com/cisco/openh264
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install nasm; fi
-  - "cd openh264 && make PREFIX=$HOME/openh264-install && make PREFIX=$HOME/openh264-install install && cd .."
-
+- git clone https://github.com/cisco/openh264
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install nasm; fi
+- cd openh264 && make PREFIX=$HOME/openh264-install && make PREFIX=$HOME/openh264-install
+  install && cd ..
 script: "./configure --with-openh264=$HOME/openh264-install && make dep && make"
-
-
 notifications:
   email: false
   slack:
     rooms:
-     - secure: "apknq08JGs+YH2lakKLzBcZ1dtfC62IlBV9gCVoz9iC3FJce52hcSuUmZKHF25ucsBH15cpSB3oloeQTcGIof/dnSAhE+fYrOr+dhJYzKFJYUY0a9srMAW2VSaAt3qsAGIOpZZ4nR6PteRpNpTcsHyZwWYCFuYzL+LqDee74FFhL64ijPk3S+US/6wZuDe61EftFk98WSb5tBKiKFpthkQlN+UTaU51gZg/bydO5+Lp+x/2ecwd10De3F7j773JUKH4lbfd8lyFGxl1/6OLCQA2yWLF9IW2aWPqv1I0fJJmQBUXhw2HaQUfSo76su03J7YxiHg8/gT1vxiSbyZaSwahShbQogl9yYOyk7rqVQYqOpHbC/TBi3bciQaZxzNl6B1q2F0JOzaYIZPDoissXABmbZDqllcW2gg7CWAWQt+Q8cUFETq1+hn4CsJgQWBQo2UcMjie8GT1/rQWRigjk7ryuis03OOJ7VJR2mbDjJoy+bTKs1ZbMLxF4gW8FqVQn9ejPbCMIbnlO0vJgbFUnav9UNmYK3CezoTGO5RIg3k49Ac6wwliCrAcWVSgDp2Ss52sAHNBPSe2EDHavSPijNnkrYbxjz27jXC9Aa3pdbY36fMLD0g7DhqMkU+l6imN/H5E4ibHuGZ9xn8QvlvDBTjgeRIm6epytaHsCue3QMHs="
+    - secure: apknq08JGs+YH2lakKLzBcZ1dtfC62IlBV9gCVoz9iC3FJce52hcSuUmZKHF25ucsBH15cpSB3oloeQTcGIof/dnSAhE+fYrOr+dhJYzKFJYUY0a9srMAW2VSaAt3qsAGIOpZZ4nR6PteRpNpTcsHyZwWYCFuYzL+LqDee74FFhL64ijPk3S+US/6wZuDe61EftFk98WSb5tBKiKFpthkQlN+UTaU51gZg/bydO5+Lp+x/2ecwd10De3F7j773JUKH4lbfd8lyFGxl1/6OLCQA2yWLF9IW2aWPqv1I0fJJmQBUXhw2HaQUfSo76su03J7YxiHg8/gT1vxiSbyZaSwahShbQogl9yYOyk7rqVQYqOpHbC/TBi3bciQaZxzNl6B1q2F0JOzaYIZPDoissXABmbZDqllcW2gg7CWAWQt+Q8cUFETq1+hn4CsJgQWBQo2UcMjie8GT1/rQWRigjk7ryuis03OOJ7VJR2mbDjJoy+bTKs1ZbMLxF4gW8FqVQn9ejPbCMIbnlO0vJgbFUnav9UNmYK3CezoTGO5RIg3k49Ac6wwliCrAcWVSgDp2Ss52sAHNBPSe2EDHavSPijNnkrYbxjz27jXC9Aa3pdbY36fMLD0g7DhqMkU+l6imN/H5E4ibHuGZ9xn8QvlvDBTjgeRIm6epytaHsCue3QMHs=
     on_success: always
+deploy:
+  provider: s3
+  region: eu-west-1
+  access_key_id: AKIAJBAYGNKLCSN7G2UQ
+  secret_access_key:
+    secure: GETvhh3l6iMmaTy3d8+F3IJ7XY//IsR8pHGD6LXCiuPcpx+YAxUd2qdwbSXveTySLDx5JicTKi7p9ULgMQZshyB+TZtXrttWfXZ5npLul+BSWTb4MXjTo2MQQgwhlpcR2eoV+HT7uWPSgZItMy5+UrbhPq3OzNkTol4DNmJ8O5Zcsjiroc+mSndbd2NCHBxOrWFXptf8vwUP4apgefhH50El60gkF9bN0AKU7r0n0gwyt5blGjiAa9b7Y0ndeBP7JIcwgh5Psey6fhlZ7/s8zqwdXsZmJc9dBikD1RtaQXYayVizj3+Hm/yCujQta3QAZY25916OhhytR4pIupP1T2C7FsAFDDaGnHhXgv2upsoon9PDlSTSXIjewJaDrq2HL2DcOBeo5um/PZz5X/NRlI/heJ1KwLfIe5RDFRMOz+JUanw/t5N79/Bc+AK8q0H+hKxY+YsFqmxcJ0h1drDtVfXiFk97aGPNdsd9W2rZBAhgf483dG5e2ZY64cZktU7zGE9FfnARoV2WWC77evdY/R43EfUChRB9OKiZ4l76Y2SGaYjI8UgFQqJ5R/YHm8Ovu3hJ49GcGooR7KI66fkY2S/hL0+zjeV8eDKmGXH+qC9NCXI9mMP5SVlJsCRsQ8GtbSin3jPtmHC+ZKxGJgwNWqTz9d4gClGVjiPxGo+2f6U=
+  bucket: pjsip-ismangil
+  acl: ''
+  on:
+    repo: ismangil/pjproject
+    branch: travis
+  skip_cleanup: true
