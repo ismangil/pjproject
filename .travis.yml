@@ -23,7 +23,7 @@ install:
 - cd openh264 && make PREFIX=$HOME/openh264-install && make PREFIX=$HOME/openh264-install
   install && cd ..
 script:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export $SSLOPT=--with-ssl=/usr/local/opt/openssl@1.1 ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then SSLOPT=--with-ssl=/usr/local/opt/openssl@1.1 ; fi
   - echo $SSLOPT
   - ./configure $SSLOPT --with-openh264=$HOME/openh264-install && make dep && make
 notifications:
