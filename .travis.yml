@@ -17,15 +17,30 @@ addons:
     - libsdl2-dev
     - libv4l-dev
 install:
+#- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install openssl@1.1 nasm sdl2 ffmpeg opus ; fi
+- svn --trust-server-cert --non-interactive checkout https://wush.net/svn/pjsip-labs/ccdash && cd ccdash && python setup.py install --home=~ && cd ..
 - git clone https://github.com/cisco/openh264
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install openssl@1.1 nasm sdl2 ffmpeg opus; fi
 - cd openh264 && make PREFIX=$HOME/openh264-install && make PREFIX=$HOME/openh264-install
   install && cd ..
 script:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then SSLOPT=--with-ssl=/usr/local/opt/openssl@1.1 ; fi
   - echo $SSLOPT
-  - ./configure $SSLOPT --with-openh264=$HOME/openh264-install && make dep && make
+  - TIMESTAMP=$(date +%Y%m%d-%H%M)
+  - echo $TIMESTAMP
+  - python ~/lib/python/ccdash.py configure "./configure $SSLOPT --with-openh264=$HOME/openh264-install" \
+    -U http://my.cdash.org/submit.php?project=PJSIP \
+    -S travis-ci \
+    -T $TIMESTAMP \
+    -B $TRAVIS_OS_NAME-gcc \
+    -G Continuous && \
+       python ~/lib/python/ccdash.py build "make dep && make all" \
+       -U http://my.cdash.org/submit.php?project=PJSIP \
+       -S travis-ci \
+       -T $TIMESTAMP \
+       -B $TRAVIS_OS_NAME-gcc \
+       -G Continuous
+#  - ./configure $SSLOPT --with-openh264=$HOME/openh264-install && make dep && make
 notifications:
   email: false
   slack:
