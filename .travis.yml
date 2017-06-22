@@ -21,7 +21,9 @@ install:
 #- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install openssl@1.1 nasm sdl2 ffmpeg opus ; fi
 - python --version
-- svn --trust-server-cert --non-interactive checkout https://wush.net/svn/pjsip-labs/ccdash && cd ccdash && python setup.py install --home=~ && cd ..
+- git clone --branch=0.3-dev https://bitbucket.org/teluu/ccdash.git
+- cd ccdash && python setup.py install --home=~ && cd ..
+#- svn --trust-server-cert --non-interactive checkout https://wush.net/svn/pjsip-labs/ccdash && cd ccdash && python setup.py install --home=~ && cd ..
 - git clone https://github.com/cisco/openh264
 - cd openh264 && make PREFIX=$HOME/openh264-install && make PREFIX=$HOME/openh264-install
   install && cd ..
