@@ -22,6 +22,7 @@ install:
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install openssl@1.1 nasm sdl2 ffmpeg opus ; fi
 - python --version
 - git clone --branch=0.3-dev https://bitbucket.org/teluu/ccdash.git
+- PYTHONUSERBASE=$HOME
 - cd ccdash && python setup.py install --home=$HOME && cd ..
 #- svn --trust-server-cert --non-interactive checkout https://wush.net/svn/pjsip-labs/ccdash && cd ccdash && python setup.py install --home=~ && cd ..
 - git clone https://github.com/cisco/openh264
@@ -37,14 +38,13 @@ script:
      -S travis-ci
      -T $TIMESTAMP
      -B $TRAVIS_OS_NAME-gcc
+     -G Continuous &&
+     python ~/lib/python/ccdash.py build "make dep && make all"
+     -U http://my.cdash.org/submit.php?project=PJSIP
+     -S travis-ci
+     -T $TIMESTAMP
+     -B $TRAVIS_OS_NAME-gcc 
      -G Continuous
-  #    && \
-  #      python ~/lib/python/ccdash.py build "make dep && make all" \
-  #      -U http://my.cdash.org/submit.php?project=PJSIP \
-  #      -S travis-ci \
-  #      -T $TIMESTAMP \
-  #      -B $TRAVIS_OS_NAME-gcc \
-  #      -G Continuous
 #  - ./configure $SSLOPT --with-openh264=$HOME/openh264-install && make dep && make
 notifications:
   email: false
